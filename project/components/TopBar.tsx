@@ -26,6 +26,7 @@ export default function TopBar({ title, subtitle }: TopBarProps) {
           </Button>
         </div>
       </div>
+  
     </div>
   );
 }

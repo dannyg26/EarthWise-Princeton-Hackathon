@@ -178,29 +178,28 @@ export default function Home() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
           >
-            <Link href="/dashboard">
-              <Button
-                size="lg"
-                className="text-lg px-8 py-6 h-auto"
-                style={{
-                  backgroundImage: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
-                  backgroundSize: '160% 100%',
-                  boxShadow: '0 10px 30px rgba(16,185,129,0.25)',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget.style.backgroundPosition = '100% 0');
-                  (e.currentTarget.style.transform = 'translateY(-1px)');
-                  (e.currentTarget.style.boxShadow = '0 14px 34px rgba(16,185,129,0.35)');
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget.style.backgroundPosition = '0 0');
-                  (e.currentTarget.style.transform = 'translateY(0)');
-                  (e.currentTarget.style.boxShadow = '0 10px 30px rgba(16,185,129,0.25)');
-                }}
-              >
-                Get Started
-              </Button>
-            </Link>
+            <Button
+              asChild
+              size="lg"
+              className="text-lg px-8 py-6 h-auto"
+              style={{
+                backgroundImage: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
+                backgroundSize: '160% 100%',
+                boxShadow: '0 10px 30px rgba(16,185,129,0.25)',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget.style.backgroundPosition = '100% 0');
+                (e.currentTarget.style.transform = 'translateY(-1px)');
+                (e.currentTarget.style.boxShadow = '0 14px 34px rgba(16,185,129,0.35)');
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget.style.backgroundPosition = '0 0');
+                (e.currentTarget.style.transform = 'translateY(0)');
+                (e.currentTarget.style.boxShadow = '0 10px 30px rgba(16,185,129,0.25)');
+              }}
+            >
+              <Link href="/login">Get Started</Link>
+            </Button>
           </motion.div>
         </div>
 
