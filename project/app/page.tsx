@@ -12,14 +12,46 @@ import {
   Droplets,
   Sun,
   Wind,
+  User,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-/* Small helper to rotate floating badge items */
+/* ---------------- Typewriter (no cursor) ---------------- */
+function useTypewriter(
+  text: string,
+  opts?: { speed?: number; startDelay?: number }
+) {
+  const { speed = 24, startDelay = 0 } = opts || {};
+  const [display, setDisplay] = React.useState('');
+
+  React.useEffect(() => {
+    let i = 0;
+    let running = true;
+    setDisplay('');
+
+    const startId = setTimeout(() => {
+      const intervalId = setInterval(() => {
+        if (!running) return clearInterval(intervalId);
+        i += 1;
+        setDisplay(text.slice(0, i));
+        if (i >= text.length) clearInterval(intervalId);
+      }, speed);
+    }, startDelay);
+
+    return () => {
+      running = false;
+      clearTimeout(startId);
+    };
+  }, [text, speed, startDelay]);
+
+  return display;
+}
+
+/* ---------------- Rotating badge chip (no typing) ---------------- */
 function BadgeRotator({
   items,
   className = '',
-  intervalMs = 4200,
+  intervalMs = 5200,
   floatY = 10,
   floatDuration = 9,
 }: {
@@ -69,27 +101,68 @@ function BadgeRotator({
   );
 }
 
-export default function Home() {
-  const features = [
-    {
-      icon: <Heart className="w-6 h-6" />,
-      title: 'Health Goals',
-      desc: 'Track wellness habits and build sustainable routines for better health.',
-      delay: 0.05,
+/* ---------------- Feature fade-in variants ---------------- */
+const featuresContainer = {
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: 'easeOut',
+      when: 'beforeChildren',
+      staggerChildren: 0.14,
     },
-    {
-      icon: <Leaf className="w-6 h-6" />,
-      title: 'Eco Actions',
-      desc: 'Make a positive impact with daily eco-friendly challenges and tips.',
-      delay: 0.1,
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: 'Progress Tracking',
-      desc: 'Visualize your journey with streaks, points, and achievements.',
-      delay: 0.15,
-    },
-  ];
+  },
+};
+
+const featureItem = {
+  hidden: { opacity: 0, y: 18, filter: 'blur(4px)' as any },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)' as any,
+    transition: { duration: 0.5, ease: 'easeOut' },
+  },
+};
+
+export default function Dashboard() {
+  const DELAYS = {
+    hero: 0.1,
+    features: 0.8,
+    button: 1.2,
+    footer: 1.6,
+  };
+
+  const TAGLINE =
+    'Your personal AI coach for sustainable living and holistic wellness. Track habits, earn points, and transform your lifestyle one task at a time.';
+
+  /* ---- Typewriter timings (only title + tagline) ---- */
+  const TITLE_SPEED = 26; // ms per character
+  const TITLE_START = 400; // initial delay before typing starts (ms)
+
+  const titleLine1Text = 'Live Better,';
+  const titleLine2Text = 'Live Greener';
+
+  const titleLine1 = useTypewriter(titleLine1Text, {
+    speed: TITLE_SPEED,
+    startDelay: TITLE_START,
+  });
+
+  const titleLine2Start =
+    TITLE_START + titleLine1Text.length * TITLE_SPEED + 350; // small pause before line 2
+  const titleLine2 = useTypewriter(titleLine2Text, {
+    speed: TITLE_SPEED,
+    startDelay: titleLine2Start,
+  });
+
+  const TAG_SPEED = 18;
+  const tagStart =
+    titleLine2Start + titleLine2Text.length * TITLE_SPEED + 500; // start after title finishes
+  const typedTagline = useTypewriter(TAGLINE, {
+    speed: TAG_SPEED,
+    startDelay: tagStart,
+  });
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-white">
@@ -102,6 +175,16 @@ export default function Home() {
         <div className="blob blob-sky" />
       </div>
 
+      {/* Profile button (top-right) */}
+      <Link
+        href="/settings/profile"
+        aria-label="Open profile settings"
+        className="group absolute right-0 top-0 -mt-2 -mr-2 md:-mr-0 md:-mt-0 md:right-2 md:top-2 inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/80 p-2 shadow-sm backdrop-blur hover:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
+      >
+        <User className="w-5 h-5 text-slate-600 transition-colors group-hover:text-emerald-600" />
+        <span className="sr-only">Profile settings</span>
+      </Link>
+
       {/* Floating rotating badges */}
       <BadgeRotator
         className="top-28 left-6 md:top-24 md:left-16"
@@ -110,9 +193,9 @@ export default function Home() {
           { icon: <Recycle className="w-4 h-4 text-emerald-600" />, label: 'Plastic-Free' },
           { icon: <Droplets className="w-4 h-4 text-emerald-600" />, label: 'Save Water' },
         ]}
-        intervalMs={4200}
+        intervalMs={5200}
         floatY={10}
-        floatDuration={9}
+        floatDuration={10}
       />
 
       <BadgeRotator
@@ -122,9 +205,9 @@ export default function Home() {
           { icon: <Sun className="w-4 h-4 text-amber-500" />, label: 'Solar Power' },
           { icon: <Wind className="w-4 h-4 text-sky-500" />, label: 'Bike to Work' },
         ]}
-        intervalMs={4800}
+        intervalMs={5600}
         floatY={12}
-        floatDuration={10}
+        floatDuration={11}
       />
 
       <div className="relative mx-auto max-w-6xl px-6 py-20">
@@ -138,7 +221,7 @@ export default function Home() {
           <div className="inline-flex items-center rounded-full border bg-white/60 px-4 py-2 shadow-sm backdrop-blur-md border-white/40">
             <Leaf className="w-7 h-7 text-green-600" />
             <span className="ml-2 text-xl font-semibold tracking-tight text-slate-900">
-              EarthWise Coach
+              EarthWise
             </span>
           </div>
         </motion.div>
@@ -155,67 +238,54 @@ export default function Home() {
             }}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
+            transition={{ duration: 0.7, ease: 'easeOut', delay: DELAYS.hero }}
           >
-            Live Better,
+            <span>{titleLine1}</span>
             <br />
-            Live Greener
+            <span>{titleLine2}</span>
           </motion.h1>
 
           <motion.p
             className="mx-auto mt-5 max-w-2xl text-balance text-lg text-slate-700"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.05 }}
+            transition={{ duration: 0.7, ease: 'easeOut', delay: DELAYS.hero + 0.1 }}
           >
-            Your personal AI coach for sustainable living and holistic wellness. Track habits,
-            earn points, and transform your lifestyle one task at a time.
+            {typedTagline}
           </motion.p>
-
-          <motion.div
-            className="mt-8"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-          >
-            <Button
-              asChild
-              size="lg"
-              className="text-lg px-8 py-6 h-auto"
-              style={{
-                backgroundImage: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
-                backgroundSize: '160% 100%',
-                boxShadow: '0 10px 30px rgba(16,185,129,0.25)',
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget.style.backgroundPosition = '100% 0');
-                (e.currentTarget.style.transform = 'translateY(-1px)');
-                (e.currentTarget.style.boxShadow = '0 14px 34px rgba(16,185,129,0.35)');
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget.style.backgroundPosition = '0 0');
-                (e.currentTarget.style.transform = 'translateY(0)');
-                (e.currentTarget.style.boxShadow = '0 10px 30px rgba(16,185,129,0.25)');
-              }}
-            >
-              <Link href="/login">Get Started</Link>
-            </Button>
-          </motion.div>
         </div>
 
-        {/* Features */}
+        {/* Features — fade-in (staggered) */}
         <motion.div
           className="mt-20 grid grid-cols-1 gap-6 md:grid-cols-3"
+          variants={featuresContainer}
           initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+          animate="show"
+          transition={{ delay: DELAYS.features }}
         >
-          {features.map((f) => (
+          {[
+            {
+              icon: <Heart className="w-6 h-6" />,
+              title: 'Health Goals',
+              desc:
+                'Track wellness habits and build sustainable routines for better health.',
+            },
+            {
+              icon: <Leaf className="w-6 h-6" />,
+              title: 'Eco Actions',
+              desc:
+                'Make a positive impact with daily eco-friendly challenges and tips.',
+            },
+            {
+              icon: <TrendingUp className="w-6 h-6" />,
+              title: 'Progress Tracking',
+              desc:
+                'Visualize your journey with streaks, points, and achievements.',
+            },
+          ].map((f) => (
             <motion.div
               key={f.title}
-              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}
-              transition={{ duration: 0.45, ease: 'easeOut', delay: f.delay }}
+              variants={featureItem}
               className="relative overflow-hidden rounded-2xl border bg-white/70 p-8 shadow-lg backdrop-blur-sm border-white/40"
               whileHover={{ y: -3, transition: { duration: 0.2 } }}
             >
@@ -229,11 +299,43 @@ export default function Home() {
           ))}
         </motion.div>
 
+        {/* Get Started button — simple fade-in */}
+        <motion.div
+          className="mt-8 flex justify-center"
+          initial={{ opacity: 0, scale: 0.98, y: 6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: DELAYS.button, duration: 0.5, ease: 'easeOut' }}
+        >
+          <Button
+            asChild
+            size="lg"
+            className="text-lg px-8 py-6 h-auto"
+            style={{
+              backgroundImage: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
+              backgroundSize: '160% 100%',
+              boxShadow: '0 10px 30px rgba(16,185,129,0.25)',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget.style.backgroundPosition = '100% 0');
+              (e.currentTarget.style.transform = 'translateY(-1px)');
+              (e.currentTarget.style.boxShadow = '0 14px 34px rgba(16,185,129,0.35)');
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget.style.backgroundPosition = '0 0');
+              (e.currentTarget.style.transform = 'translateY(0)');
+              (e.currentTarget.style.boxShadow = '0 10px 30px rgba(16,185,129,0.25)');
+            }}
+          >
+            <Link href="/login">Get Started</Link>
+          </Button>
+        </motion.div>
+
+        {/* Footer */}
         <motion.p
           className="pt-10 text-center text-sm text-slate-500"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
+          transition={{ duration: 0.6, delay: DELAYS.footer }}
         >
           Built with mindfulness for the planet—and you.
         </motion.p>
@@ -241,12 +343,9 @@ export default function Home() {
 
       {/* Background & text gradient keyframes (scoped) */}
       <style jsx global>{`
-        /* Motion-safe */
         @media (prefers-reduced-motion: reduce) {
           .blob, .gradient-wash { animation: none !important; }
         }
-
-        /* Subtle grid */
         .grid-bg {
           background-image:
             radial-gradient(circle at 1px 1px, rgba(2, 6, 23, 0.08) 1px, transparent 0),
@@ -254,8 +353,6 @@ export default function Home() {
           background-size: 26px 26px, 52px 52px;
           background-position: 0 0, 13px 13px;
         }
-
-        /* Soft animated gradient wash */
         .gradient-wash {
           pointer-events: none;
           background:
@@ -267,8 +364,6 @@ export default function Home() {
           0%   { transform: translateY(0px);   opacity: 1; }
           100% { transform: translateY(10px); opacity: 1; }
         }
-
-        /* Color blobs */
         .blob {
           position: absolute;
           width: 28rem;
@@ -282,15 +377,12 @@ export default function Home() {
         .blob-green  { background: radial-gradient(circle at 30% 30%, #22c55e, transparent 60%); top: -8rem; left: -6rem; }
         .blob-emerald{ background: radial-gradient(circle at 70% 40%, #10b981, transparent 60%); top: 35vh; right: -10rem; animation-delay: 2.2s; }
         .blob-sky    { background: radial-gradient(circle at 50% 50%, #38bdf8, transparent 60%); bottom: -10rem; left: 15%; animation-delay: 4.1s; }
-
         @keyframes blob-float {
           0%   { transform: translate(0, 0) scale(1); }
           33%  { transform: translate(18px, -14px) scale(1.03); }
           66%  { transform: translate(-14px, 10px) scale(0.985); }
           100% { transform: translate(0, 0) scale(1); }
         }
-
-        /* Animated text gradient */
         @keyframes gradx {
           0% { background-position: 0% 50% }
           50% { background-position: 100% 50% }

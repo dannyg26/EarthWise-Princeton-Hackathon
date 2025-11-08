@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ListTodo, MessageSquare, Settings, Leaf } from 'lucide-react';
+import { LayoutDashboard, ListTodo, MessageSquare, Settings, Leaf, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/tasks', label: 'Tasks', icon: ListTodo },
   { href: '/coach', label: 'Coach', icon: MessageSquare },
   { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/leaderboard', label: 'LeaderBoard', icon: Trophy},
 ];
 
 export default function Sidebar() {
@@ -20,7 +21,7 @@ export default function Sidebar() {
       <div className="p-6 border-b border-slate-200">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Leaf className="w-8 h-8 text-green-600" />
-          <span className="text-xl font-bold text-slate-900">EcoLife Coach</span>
+          <span className="text-xl font-bold text-slate-900">EarthWise</span>
         </Link>
       </div>
 

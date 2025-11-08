@@ -83,7 +83,7 @@ export default function AboutPage() {
           <div className="inline-flex items-center rounded-full border bg-white/70 px-4 py-2 shadow-sm backdrop-blur border-white/50">
             <Leaf className="w-6 h-6 text-green-600" />
             <span className="ml-2 text-lg font-semibold text-slate-900">
-              About EcoLife Coach
+              About EarthWise
             </span>
           </div>
 
@@ -91,7 +91,7 @@ export default function AboutPage() {
             Wellness meets Sustainability—guided by AI
           </h1>
           <p className="mx-auto mt-3 max-w-3xl text-lg text-slate-700">
-            EcoLife Coach is a web platform that blends personal wellness with environmental
+            EarthWise is a web platform that blends personal wellness with environmental
             sustainability via an AI-driven life coach. It helps users build healthy habits
             (exercise, nutrition, mental health) and eco-friendly practices (recycling,
             saving energy) in a fun, gamified way.
@@ -113,7 +113,7 @@ export default function AboutPage() {
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Why it’s unique</h2>
               <p className="mt-2 text-slate-700">
-                EcoLife Coach turns improving <em>your life and the planet</em> into a collaborative
+                EarthWise turns improving <em>your life and the planet</em> into a collaborative
                 game with AI. Example prompt: “Walk or bike to work this week instead of driving —
                 you’ll burn calories and cut carbon! 📉🌳”. Users earn points or charitable rewards,
                 while the AI adapts to preferences. This creative fusion addresses two common
@@ -196,7 +196,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Footnotes (keep the bracket markers you used) */}
+        {/* Footnotes */}
         <p className="mt-8 text-xs leading-relaxed text-slate-500">
           [1] HackPrinceton tracks; [2] Amazon AI Innovation; [3] Capital One financial hack;
           [4] Dedalus Labs APIs; [5] “Ah-ha” factor (distinctiveness).
