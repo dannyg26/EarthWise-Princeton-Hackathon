@@ -9,7 +9,7 @@ import Background from '@/components/Background';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-title: 'EarthWise Coach - Sustainable Living & Wellness',
+title: 'EarthWise - Sustainable Living & Wellness',
 description: 'Your personal AI coach for sustainable living and holistic wellness',
 };
 

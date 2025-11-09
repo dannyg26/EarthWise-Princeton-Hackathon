@@ -57,12 +57,11 @@ type DayEntry = {
   };
   health: SnapshotTask[];
   eco: SnapshotTask[];
-  // optional metadata about what triggered the save
   action?: { section: 'health' | 'eco' | 'rollover'; taskId?: string; completed?: boolean };
 };
 
 const ENTRIES_KEY = 'EW_ENTRIES_V1';
-const ENTRIES_LIMIT = 180; // keep ~6 months of daily snapshots by default
+const ENTRIES_LIMIT = 180;
 
 /* ---------------- Scoring / UI constants ---------------- */
 const BASE_POINTS = 240;
@@ -407,13 +406,12 @@ export default function DashboardPage() {
   const [healthIndex, setHealthIndex] = useState<number>(0);
   const [ecoIndex, setEcoIndex] = useState<number>(0);
 
-  // Indices ref (avoid stale closures)
   const healthIndexRef = useRef(0);
   const ecoIndexRef = useRef(0);
   useEffect(() => { healthIndexRef.current = healthIndex; }, [healthIndex]);
   useEffect(() => { ecoIndexRef.current = ecoIndex; }, [ecoIndex]);
 
-  // New: keep *task arrays* in refs so snapshot uses fresh other-section state
+  // Keep task arrays in refs so snapshot uses fresh other-section state
   const healthTasksRef = useRef<Task[]>(defaultHealth);
   const ecoTasksRef = useRef<Task[]>(defaultEco);
   useEffect(() => { healthTasksRef.current = healthTasks; }, [healthTasks]);
@@ -449,7 +447,6 @@ export default function DashboardPage() {
 
       const todayK = dateKey();
 
-      // New: if day rolled over, snapshot yesterday's final state before resetting
       if (lastOpenRaw && lastOpenRaw !== todayK) {
         const rolloverEntry = buildEntry(h, e, lastOpenRaw, { section: 'rollover' });
         saveEntryToStorage(rolloverEntry);
@@ -488,7 +485,7 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Align once on first render so we start on an incomplete item if needed
+  // Align once so we start on an incomplete item if needed
   const didInitAlignRef = useRef(false);
   useEffect(() => {
     if (didInitAlignRef.current) return;
@@ -683,7 +680,7 @@ export default function DashboardPage() {
     else setEcoIndex(indexById(ecoTasks, id));
   }
 
-  // >>> SOUND + CONFETTI + SNAPSHOT (only when flipping to completed)
+  // >>> SOUND + CONFETTI + SNAPSHOT + NOTIFY (only when flipping to completed)
   function handleToggleAndAutoAdvance(section: 'health' | 'eco') {
     if (section === 'health') {
       setHealthTasks((prev) => {
@@ -695,19 +692,36 @@ export default function DashboardPage() {
 
         const updated = prev.map((t, i) => (i === idx ? { ...t, completed: !t.completed } : t));
 
+        // debug: log toggle flow and derived counts to help trace a bug
+        try {
+          const newHealthCompleted = updated.filter((t) => t.completed).length;
+          const newTotalPoints = BASE_POINTS + [...updated, ...ecoTasksRef.current].reduce((s, t) => s + (t.completed ? t.points : 0), 0);
+          // eslint-disable-next-line no-console
+          console.debug('[EW] health toggle', { idx, id: current.id, wasCompleted, newHealthCompleted, newTotalPoints });
+        } catch (err) {
+          // ignore logging errors
+        }
+
+        // persist to localStorage; same-window listeners already use state, so avoid re-dispatching
         localStorage.setItem(STORAGE_KEYS.HEALTH, JSON.stringify(updated));
-        window.dispatchEvent(
-          new CustomEvent('taskStateUpdate', {
-            detail: { key: STORAGE_KEYS.HEALTH, value: JSON.stringify(updated) },
-          })
-        );
 
         playClickIfEnabled();
 
-        // New: only snapshot when changing to "completed"
         if (!wasCompleted) {
           celebrateIfEnabled();
           setRecentHealth((old) => pushRecent(old, current.id));
+
+          // 🔔 NEW: Fire TopBar notification (bell stripe + menu item)
+          window.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                title: 'Health task completed',
+                description: `${current.label}  +${current.points} pts`,
+                level: 'success',
+                href: '/tasks?section=health',
+              },
+            })
+          );
 
           // Snapshot full state (health AFTER update, eco current)
           const entry = buildEntry(updated, ecoTasksRef.current, undefined, {
@@ -731,18 +745,36 @@ export default function DashboardPage() {
 
         const updated = prev.map((t, i) => (i === idx ? { ...t, completed: !t.completed } : t));
 
+        // debug: log toggle flow and derived counts to help trace a bug
+        try {
+          const newEcoCompleted = updated.filter((t) => t.completed).length;
+          const newTotalPoints = BASE_POINTS + [...healthTasksRef.current, ...updated].reduce((s, t) => s + (t.completed ? t.points : 0), 0);
+          // eslint-disable-next-line no-console
+          console.debug('[EW] eco toggle', { idx, id: current.id, wasCompleted, newEcoCompleted, newTotalPoints });
+        } catch (err) {
+          // ignore logging errors
+        }
+
+        // persist to localStorage; same-window listeners already use state, so avoid re-dispatching
         localStorage.setItem(STORAGE_KEYS.ECO, JSON.stringify(updated));
-        window.dispatchEvent(
-          new CustomEvent('taskStateUpdate', {
-            detail: { key: STORAGE_KEYS.ECO, value: JSON.stringify(updated) },
-          })
-        );
 
         playClickIfEnabled();
 
         if (!wasCompleted) {
           celebrateIfEnabled();
           setRecentEco((old) => pushRecent(old, current.id));
+
+          // 🔔 NEW: Fire TopBar notification (bell stripe + menu item)
+          window.dispatchEvent(
+            new CustomEvent('notify', {
+              detail: {
+                title: 'Eco task completed',
+                description: `${current.label}  +${current.points} pts`,
+                level: 'success',
+                href: '/tasks?section=eco',
+              },
+            })
+          );
 
           // Snapshot full state (eco AFTER update, health current)
           const entry = buildEntry(healthTasksRef.current, updated, undefined, {
@@ -853,9 +885,7 @@ export default function DashboardPage() {
     const a = accent(section);
     return (
       <div className={`relative mt-4 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden`}>
-        {/* Accent header bar */}
         <div className={`h-1 w-full bg-gradient-to-r ${a.headerBar}`} />
-        {/* Header */}
         <div className="flex items-start justify-between px-4 sm:px-5 pt-4">
           <div className="flex items-center gap-2">
             <div className={`inline-flex items-center gap-1 rounded-full ${a.badgeBg} ${a.badgeText} px-2 py-0.5 text-[11px]`}>
@@ -869,7 +899,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Content grid */}
         <div className="px-4 sm:px-5 pb-4 pt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-3">
             <div className="rounded-xl bg-slate-50 p-3">
@@ -907,7 +936,7 @@ export default function DashboardPage() {
     );
   }
 
-  /* ---- current task panel (with accent ring in focus) ---- */
+  /* ---- current task panel ---- */
   function CurrentTaskCard({
     section,
     task,
@@ -929,7 +958,6 @@ export default function DashboardPage() {
         className={`relative flex items-center justify-between p-4 rounded-2xl border bg-white
         ${focusActive ? `${a.ring} border-transparent shadow-md` : 'border-slate-100'}`}
       >
-        {/* subtle corner accent */}
         {focusActive && (
           <div className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-gradient-to-br from-white/0 to-black/5 blur-2xl" />
         )}
@@ -963,7 +991,7 @@ export default function DashboardPage() {
         <TopBar title="Dashboard" subtitle="Track your progress and stay motivated" />
 
         <main className="mx-auto max-w-6xl py-8 px-4">
-          {/* Top stats row (aligned) */}
+          {/* Top stats row */}
           <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-12 items-stretch">
             {/* Today's Points */}
             <div className="md:col-span-3 rounded-2xl border border-slate-100 bg-white/90 p-6 shadow-sm h-full flex flex-col">
@@ -978,7 +1006,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Current Streak (summary card) */}
+            {/* Current Streak */}
             <div className="md:col-span-6 rounded-2xl border border-slate-100 bg-white/90 p-6 shadow-sm h-full flex flex-col">
               <div className="flex items-center justify-between">
                 <div>
